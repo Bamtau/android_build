@@ -120,17 +120,13 @@ function setpaths()
     prebuiltdir=$(getprebuilt)
     gccprebuiltdir=$(get_abs_build_var ANDROID_GCC_PREBUILTS)
 
-    # defined in core/config.mk
-    targetgccversion=$(get_build_var TARGET_GCC_VERSION)
-    export TARGET_GCC_VERSION=$targetgccversion
-
     # The gcc toolchain does not exists for windows/cygwin. In this case, do not reference it.
     export ANDROID_EABI_TOOLCHAIN=
     local ARCH=$(get_build_var TARGET_ARCH)
     case $ARCH in
         x86) toolchaindir=x86/i686-linux-android-4.6/bin
             ;;
-        arm) toolchaindir=arm/arm-linux-androideabi-$targetgccversion/bin
+        arm) toolchaindir=arm/arm-linux-androideabi-4.7/bin
             ;;
         mips) toolchaindir=mips/mipsel-linux-android-4.6/bin
             ;;
@@ -146,7 +142,7 @@ function setpaths()
     unset ARM_EABI_TOOLCHAIN ARM_EABI_TOOLCHAIN_PATH
     case $ARCH in
         arm)
-            toolchaindir=arm/arm-eabi-$targetgccversion/bin
+            toolchaindir=arm/arm-eabi-4.7/bin
             if [ -d "$gccprebuiltdir/$toolchaindir" ]; then
                  export ARM_EABI_TOOLCHAIN="$gccprebuiltdir/$toolchaindir"
                  ARM_EABI_TOOLCHAIN_PATH=":$gccprebuiltdir/$toolchaindir"
@@ -478,7 +474,7 @@ function breakfast()
     AOKP_DEVICES_ONLY="true"
     unset LUNCH_MENU_CHOICES
     add_lunch_combo full-eng
-    for f in `/bin/ls vendor/orca/vendorsetup.sh 2> /dev/null`
+    for f in `/bin/ls vendor/aosp/vendorsetup.sh 2> /dev/null`
         do
             echo "including $f"
             . $f
@@ -494,8 +490,8 @@ function breakfast()
             # A buildtype was specified, assume a full device name
             lunch $target
         else
-            # This is probably just the Orca model name
-            lunch orca_$target-userdebug
+            # This is probably just the Xylon model name
+            lunch xylon_$target-userdebug
         fi
     fi
     return $?
@@ -1228,7 +1224,7 @@ function mka() {
             make -j `sysctl hw.ncpu|cut -d" " -f2` "$@"
             ;;
         *)
-            schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
             ;;
     esac
 }
@@ -1250,9 +1246,9 @@ function mkapush() {
             ;;
         *)
             if [ ! -f $ANDROID_PRODUCT_OUT/installed-files.txt ]; then
-                schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) installed-file-list
+                schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` installed-file-list
             fi
-            schedtool -B -n 1 -e ionice -n 1 make -j$(cat /proc/cpuinfo | grep "^processor" | wc -l) "$@"
+            schedtool -B -n 1 -e ionice -n 1 make -j `cat /proc/cpuinfo | grep "^processor" | wc -l` "$@"
             ;;
     esac
     case $@ in
